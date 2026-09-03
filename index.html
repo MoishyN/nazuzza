@@ -13,8 +13,8 @@
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <link rel="canonical" href="https://nazuzza.com">
-<link rel="icon" href="assets/icon.png">
-<link rel="apple-touch-icon" href="assets/icon.png">
+<link rel="icon" href="assets/icon-rounded.png">
+<link rel="apple-touch-icon" href="assets/icon-rounded.png">
 <meta property="og:image" content="https://nazuzza.com/assets/icon.png">
 <style>
 :root{
@@ -74,10 +74,10 @@ h1,h2,h3{margin:0}
 /* .typography-headline-super (48/64/80 @ 600) — capped at 64 because the
    wordmark sits in a 480px card, not full-bleed like Apple's hero. */
 .display{
-  font-size:64px;
-  line-height:1.0625;
-  font-weight:600;
-  letter-spacing:-.009em;
+  font-size:96px;
+  line-height:1.0416666667;
+  font-weight:700;
+  letter-spacing:-.015em;
 }
 /* .typography-section-headline (56/80/96 @ 700) — top 96px tier dropped
    because our content column is 1120px, not Apple's full-bleed 1440. */
@@ -115,6 +115,8 @@ h1,h2,h3{margin:0}
   inset:-5%;
   z-index:0;
   filter:blur(6px);
+  /* zoomed in past the fitted size; the country overflows top and bottom */
+  transform:scale(1.45);
   /* sea colour fills whatever the map outline does not cover */
   background:var(--map-water);
   pointer-events:none;
@@ -204,23 +206,16 @@ h1,h2,h3{margin:0}
   position:relative;
   z-index:3;
   width:100%;
-  max-width:480px;
-  padding:48px;
+  max-width:560px;
   text-align:center;
-  background:var(--glass-bg);
-  -webkit-backdrop-filter:blur(24px) saturate(180%);
-  backdrop-filter:blur(24px) saturate(180%);
-  border:1px solid var(--glass-border);
-  border-radius:24px;
-  box-shadow:0 8px 32px rgba(0,0,0,0.12);
 }
 .app-icon{
-  width:80px;
-  height:80px;
-  border-radius:20px;
-  margin:0 auto 22px;
+  width:120px;
+  height:120px;
+  border-radius:34px;
+  margin:0 auto 28px;
   overflow:hidden;
-  box-shadow:0 6px 20px rgba(26,110,255,0.35);
+  box-shadow:0 10px 30px rgba(26,110,255,0.32);
 }
 .app-icon img{width:100%;height:100%}
 .tagline{margin:14px 0 0}
@@ -243,76 +238,83 @@ h1,h2,h3{margin:0}
 /* ---------- SECTIONS ---------- */
 .section{padding:140px 24px}
 .features{background:var(--bg-secondary)}
-.screenshots{background:var(--bg)}
-.feature-grid{
-  max-width:1120px;
+.screenshots{background:linear-gradient(180deg,rgba(26,110,255,.10),rgba(26,110,255,.03)),var(--bg)}
+/* Stacked pin blocks, after the apple.com/maps pattern */
+.feature-list{
+  max-width:760px;
   margin:0 auto;
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:24px;
-}
-.feature-card{
-  background:var(--glass-bg);
-  -webkit-backdrop-filter:blur(12px);
-  backdrop-filter:blur(12px);
-  border:1px solid var(--glass-border);
-  border-radius:20px;
-  padding:36px 26px;
-  text-align:center;
   display:flex;
   flex-direction:column;
-  align-items:center;
+  gap:120px;
 }
-.feature-card .icon{color:var(--accent);margin-bottom:20px}
-.feature-card h3{               /* Apple .typography-label */
-  margin:0 0 10px;
-  font-size:24px;
-  line-height:1.1666666667;
-  font-weight:600;
-  letter-spacing:.009em;
-}
-.feature-card p{                /* Apple .typography-body */
+.feature{display:flex;flex-direction:column;align-items:center;text-align:center}
+.feature .pin{width:88px;height:auto;margin-bottom:34px}
+.feature h3{
   margin:0;
-  font-size:17px;
-  line-height:1.4705882353;
-  letter-spacing:-.022em;
+  font-size:48px;
+  line-height:1.0834933333;
+  font-weight:700;
+  letter-spacing:-.003em;
+  max-width:17ch;
+}
+.feature p{
+  margin:18px 0 0;
+  font-size:21px;
+  line-height:1.381002381;
+  letter-spacing:.011em;
   color:var(--text-secondary);
-  max-width:34ch;
+  max-width:32ch;
 }
 
 /* ---------- PHONES ---------- */
-.phone-row{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:24px;
+/* Device cards, after the apple.com/maps pattern */
+.shot-list{
   max-width:1120px;
   margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  gap:24px;
 }
+.shot-card{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  align-items:center;
+  gap:32px;
+  background:var(--bg);
+  border-radius:28px;
+  padding:56px 56px 0;
+  overflow:hidden;
+  box-shadow:0 12px 40px rgba(0,0,0,0.08);
+}
+.shot-card .copy{padding-bottom:56px}
+.shot-card h3{
+  margin:0;
+  font-size:40px;
+  line-height:1.1;
+  font-weight:700;
+  letter-spacing:0em;
+}
+.shot-card h3 span{display:block}
+.shot-card .eyebrow{color:var(--text-secondary)}
 .phone{
-  --s:.95;
-  --ty:12px;
-  flex:none;
-  width:290px;
-  border-radius:60px;
+  width:100%;
+  max-width:260px;
+  /* deliberately bleeds off the card's bottom edge */
+  margin:0 auto -120px;
+  border-radius:44px;
   border:2px solid var(--glass-border);
   background:var(--bg-secondary);
-  padding:10px;
+  padding:8px;
   position:relative;
-  box-shadow:0 32px 64px rgba(0,0,0,0.2);
-  transform:scale(var(--s)) translateY(var(--ty));
+  box-shadow:0 24px 48px rgba(0,0,0,0.18);
 }
-.phone.center{--s:1.05;--ty:-12px;z-index:2}
-/* reveal sits on .shot, so it cannot clobber the phone's own scale */
-.shot.reveal{transform:translateY(24px)}
-.shot.reveal.in{transform:translateY(0)}
 .island{
   position:absolute;
-  top:20px;
+  top:18px;
   left:50%;
   transform:translateX(-50%);
-  width:82px;
-  height:24px;
+  width:70px;
+  height:21px;
   border-radius:100px;
   background:#000;
   z-index:3;
@@ -321,20 +323,11 @@ h1,h2,h3{margin:0}
 .screen{
   width:100%;
   aspect-ratio:386/840;
-  border-radius:52px;
+  border-radius:38px;
   overflow:hidden;
   background:var(--bg-secondary);
 }
 .screen img{width:100%;height:100%;object-fit:cover;display:block}
-.shot{margin:0;flex:none;display:flex;flex-direction:column;align-items:center}
-.shot figcaption{
-  margin-top:22px;
-  font-size:17px;
-  font-weight:600;
-  letter-spacing:-.014em;
-  color:var(--text-secondary);
-}
-.dots{display:none}
 
 /* ---------- FOOTER ---------- */
 footer{
@@ -381,60 +374,35 @@ footer{
 @media (max-width:767px){
   /* body copy stays 17px on mobile — Apple does not shrink it */
   .section{padding:100px 20px}
-  .display{font-size:48px;line-height:1.0834933333;letter-spacing:-.003em}
+  .display{font-size:56px;line-height:1.0714285714;letter-spacing:0em}
   .section-title{
     font-size:56px;
     line-height:1.0714285714;
     letter-spacing:0em;
     margin-bottom:50px;
   }
-  .feature-card h3{font-size:21px;line-height:1.1904761905;letter-spacing:0em}
+  .shot-card .copy{padding-bottom:30px}
   /* card sits low, chips get the space above it */
   .hero{
     align-items:flex-end;
     padding:20px 20px 40px;
   }
-  .hero-card{padding:34px 26px;border-radius:22px}
+  .hero-card{max-width:none}
   .lead{font-size:19px;line-height:1.4211026316;letter-spacing:.012em}
   .chips{height:60%}
   .chip-extra{display:none}
   /* one card per row so the copy has room */
-  .feature-grid{grid-template-columns:1fr;gap:16px}
-  .feature-card{padding:32px 24px}
-  .feature-card p{max-width:40ch}
-  .phone-row{
-    gap:16px;
-    overflow-x:auto;
-    scroll-snap-type:x mandatory;
-    -webkit-overflow-scrolling:touch;
-    scrollbar-width:none;
-    padding:12px calc(50% - 140px) 4px;
-    justify-content:flex-start;
-  }
-  .phone-row::-webkit-scrollbar{display:none}
-  .phone{
-    width:280px;
-    border-radius:56px;
-    padding:9px;
-    transform:none;
-  }
-  .phone.center{transform:none}
-  .shot{scroll-snap-align:center}
-  .screen{border-radius:48px}
-  .shot figcaption{margin-top:18px;font-size:16px}
-  .island{width:74px;height:22px;top:18px}
-  .dots{
-    display:flex;
-    justify-content:center;
-    gap:8px;
-    margin-top:28px;
-  }
-  .dots button{
-    width:8px;height:8px;padding:0;border:none;border-radius:50%;
-    background:var(--text-secondary);opacity:.3;transition:opacity .2s ease,transform .2s ease;
-    cursor:pointer;
-  }
-  .dots button.active{opacity:1;background:var(--accent);transform:scale(1.25)}
+  .feature-list{gap:76px}
+  .feature .pin{width:76px;margin-bottom:26px}
+  .feature h3{font-size:32px;line-height:1.125;letter-spacing:0em;max-width:20ch}
+  .feature p{font-size:19px;line-height:1.4211026316;letter-spacing:.012em;max-width:36ch}
+  .shot-list{gap:16px}
+  .shot-card{grid-template-columns:1fr;gap:0;padding:36px 28px 0;border-radius:24px}
+  .shot-card .copy{order:-1;padding-bottom:30px}
+  .shot-card h3,.shot-card .eyebrow{font-size:30px}
+  .phone{max-width:240px;margin-bottom:-80px;border-radius:38px;padding:7px}
+  .island{width:64px;height:19px;top:15px}
+  .screen{border-radius:32px}
 }
 @media (prefers-reduced-motion: reduce){
   html{scroll-behavior:auto}
@@ -536,7 +504,7 @@ footer{
   <!-- Liquid glass card -->
   <div class="hero-card">
     <div class="app-icon">
-      <img src="assets/icon.png" alt="Nazuzza app icon" width="80" height="80">
+      <img src="assets/icon.png" alt="Nazuzza app icon" width="120" height="120">
     </div>
 
     <h1 class="display">Nazuzza</h1>
@@ -561,61 +529,81 @@ footer{
 
 <!-- ================= FEATURES ================= -->
 <section class="section features" id="features">
-  <h2 class="section-title reveal" data-en="Everything you need to get around" data-he="כל מה שצריך כדי להתנייד">Everything you need to get around</h2>
-
-  <div class="feature-grid">
-    <div class="feature-card reveal" style="--i:0">
-      <div class="icon" aria-hidden="true">
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="6" width="15" height="13" rx="3"/>
-          <path d="M3 13h15"/><circle cx="7.5" cy="22.5" r="1.6"/><circle cx="13.5" cy="22.5" r="1.6"/>
-          <rect x="22" y="21" width="15" height="13" rx="4"/>
-          <path d="M22 28h15"/><path d="M26 37l2-3M33 37l-2-3"/>
-          <path d="M18 15c4 0 4 6 8 6" stroke-dasharray="2.5 3"/>
-        </svg>
-      </div>
+  <div class="feature-list">
+    <div class="feature reveal" style="--i:0">
+      <svg class="pin" viewBox="0 0 100 128" aria-hidden="true">
+        <defs><linearGradient id="pin1" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#4DB1FF"/><stop offset="1" stop-color="#1A6EFF"/>
+        </linearGradient></defs>
+        <g fill="url(#pin1)">
+          <circle cx="50" cy="46" r="42"/>
+          <path d="M41 82 L50 106 L59 82 Z"/>
+          <circle cx="50" cy="116" r="4.5"/>
+        </g>
+        <g transform="translate(28,24) scale(1.1)" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="6" width="15" height="13" rx="3"/><path d="M3 13h15"/>
+        <circle cx="7.5" cy="22.5" r="1.6"/><circle cx="13.5" cy="22.5" r="1.6"/>
+        <rect x="22" y="21" width="15" height="13" rx="4"/><path d="M22 28h15"/>
+        <path d="M26 37l2-3M33 37l-2-3"/><path d="M18 15c4 0 4 6 8 6" stroke-dasharray="2.5 3"/>
+        </g>
+      </svg>
       <h3 data-en="Buses, Trains &amp; Light Rail" data-he="אוטובוסים, רכבות ורכבת קלה">Buses, Trains &amp; Light Rail</h3>
       <p data-en="Plan trips combining all Israeli transit modes in one seamless journey." data-he="תכנן נסיעות המשלבות את כל אמצעי התחבורה הציבורית הישראלית.">Plan trips combining all Israeli transit modes in one seamless journey.</p>
     </div>
-
-    <div class="feature-card reveal" style="--i:1">
-      <div class="icon" aria-hidden="true">
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="24" cy="22" r="12"/>
-          <path d="M24 16v6l4.5 3"/>
-          <path d="M9 10c2.5 2.5 2.5 6.5 0 9"/>
-          <path d="M4 6c4.5 4.5 4.5 12.5 0 17"/>
-        </svg>
-      </div>
+    <div class="feature reveal" style="--i:1">
+      <svg class="pin" viewBox="0 0 100 128" aria-hidden="true">
+        <defs><linearGradient id="pin2" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#4DB1FF"/><stop offset="1" stop-color="#1A6EFF"/>
+        </linearGradient></defs>
+        <g fill="url(#pin2)">
+          <circle cx="50" cy="46" r="42"/>
+          <path d="M41 82 L50 106 L59 82 Z"/>
+          <circle cx="50" cy="116" r="4.5"/>
+        </g>
+        <g transform="translate(28,24) scale(1.1)" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="24" cy="22" r="12"/><path d="M24 16v6l4.5 3"/>
+        <path d="M9 10c2.5 2.5 2.5 6.5 0 9"/><path d="M4 6c4.5 4.5 4.5 12.5 0 17"/>
+        </g>
+      </svg>
       <h3 data-en="Live Departure Times" data-he="זמני יציאה בזמן אמת">Live Departure Times</h3>
       <p data-en="See real-time arrivals for nearby stops with live vehicle tracking." data-he="ראה הגעות בזמן אמת לתחנות קרובות עם מעקב כלי רכב חי.">See real-time arrivals for nearby stops with live vehicle tracking.</p>
     </div>
-
-    <div class="feature-card reveal" style="--i:2">
-      <div class="icon" aria-hidden="true">
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="9" width="21" height="22" rx="3.5"/>
-          <path d="M7 14h7"/>
-          <path d="M18 15.5c2.4 2.6 2.4 8.4 0 11"/>
-          <path d="M24 11.5c4.6 4.6 4.6 14.4 0 19"/>
-          <path d="M30 7.5c6.8 6.8 6.8 22.2 0 27"/>
-        </svg>
-      </div>
+    <div class="feature reveal" style="--i:2">
+      <svg class="pin" viewBox="0 0 100 128" aria-hidden="true">
+        <defs><linearGradient id="pin3" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#4DB1FF"/><stop offset="1" stop-color="#1A6EFF"/>
+        </linearGradient></defs>
+        <g fill="url(#pin3)">
+          <circle cx="50" cy="46" r="42"/>
+          <path d="M41 82 L50 106 L59 82 Z"/>
+          <circle cx="50" cy="116" r="4.5"/>
+        </g>
+        <g transform="translate(28,24) scale(1.1)" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="9" width="21" height="22" rx="3.5"/><path d="M7 14h7"/>
+        <path d="M18 15.5c2.4 2.6 2.4 8.4 0 11"/><path d="M24 11.5c4.6 4.6 4.6 14.4 0 19"/>
+        <path d="M30 7.5c6.8 6.8 6.8 22.2 0 27"/>
+        </g>
+      </svg>
       <h3 data-en="RavKav Card Reader" data-he="קורא כרטיס רב-קו">RavKav Card Reader</h3>
       <p data-en="Scan your RavKav card with NFC to check your balance and contract details." data-he="סרוק את כרטיס הרב-קו שלך עם NFC לבדיקת יתרה ופרטי חוזה.">Scan your RavKav card with NFC to check your balance and contract details.</p>
     </div>
-
-    <div class="feature-card reveal" style="--i:3">
-      <div class="icon" aria-hidden="true">
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="20" cy="20" r="15"/>
-          <path d="M5 20h30"/>
-          <path d="M20 5c4.5 4.6 4.5 25.4 0 30"/>
-          <path d="M20 5c-4.5 4.6-4.5 25.4 0 30"/>
-          <text x="11.5" y="18" font-size="9" font-weight="700" stroke="none" fill="currentColor" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">A</text>
-          <text x="23" y="30" font-size="9" font-weight="700" stroke="none" fill="currentColor" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">א</text>
-        </svg>
-      </div>
+    <div class="feature reveal" style="--i:3">
+      <svg class="pin" viewBox="0 0 100 128" aria-hidden="true">
+        <defs><linearGradient id="pin4" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#4DB1FF"/><stop offset="1" stop-color="#1A6EFF"/>
+        </linearGradient></defs>
+        <g fill="url(#pin4)">
+          <circle cx="50" cy="46" r="42"/>
+          <path d="M41 82 L50 106 L59 82 Z"/>
+          <circle cx="50" cy="116" r="4.5"/>
+        </g>
+        <g transform="translate(28,24) scale(1.1)" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="20" cy="20" r="15"/><path d="M5 20h30"/>
+        <path d="M20 5c4.5 4.6 4.5 25.4 0 30"/><path d="M20 5c-4.5 4.6-4.5 25.4 0 30"/>
+        <text x="11.5" y="18" font-size="9" font-weight="700" stroke="none" fill="#fff" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">A</text>
+        <text x="23" y="30" font-size="9" font-weight="700" stroke="none" fill="#fff" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">א</text>
+        </g>
+      </svg>
       <h3 data-en="Hebrew &amp; English" data-he="עברית ואנגלית">Hebrew &amp; English</h3>
       <p data-en="Fully localized in both languages, following your device settings." data-he="מותאם מלא לשתי השפות, לפי הגדרות המכשיר שלך.">Fully localized in both languages, following your device settings.</p>
     </div>
@@ -626,8 +614,8 @@ footer{
 <section class="section screenshots" id="screenshots">
   <h2 class="section-title reveal" data-en="Designed for how you travel" data-he="מעוצב לאופן שבו אתה נוסע">Designed for how you travel</h2>
 
-  <div class="phone-row" id="phoneRow">
-    <figure class="shot reveal" style="--i:0">
+  <div class="shot-list">
+    <div class="shot-card reveal" style="--i:0">
       <div class="phone">
         <div class="island"></div>
         <div class="screen">
@@ -638,10 +626,15 @@ footer{
                alt="Route Planning" data-alt-en="Route Planning" data-alt-he="תכנון מסלול">
         </div>
       </div>
-      <figcaption data-en="Route Planning" data-he="תכנון מסלול">Route Planning</figcaption>
-    </figure>
-    <figure class="shot reveal" style="--i:1">
-      <div class="phone center">
+      <div class="copy">
+        <h3>
+          <span class="eyebrow" data-en="Route planning." data-he="תכנון מסלול.">Route planning.</span>
+          <span data-en="Every mode in one search." data-he="כל אמצעי התחבורה בחיפוש אחד.">Every mode in one search.</span>
+        </h3>
+      </div>
+    </div>
+    <div class="shot-card reveal" style="--i:1">
+      <div class="phone">
         <div class="island"></div>
         <div class="screen">
           <img src="assets/screens/screen-options.jpg"
@@ -651,9 +644,14 @@ footer{
                alt="Journey Options" data-alt-en="Journey Options" data-alt-he="אפשרויות נסיעה">
         </div>
       </div>
-      <figcaption data-en="Journey Options" data-he="אפשרויות נסיעה">Journey Options</figcaption>
-    </figure>
-    <figure class="shot reveal" style="--i:2">
+      <div class="copy">
+        <h3>
+          <span class="eyebrow" data-en="Journey options." data-he="אפשרויות נסיעה.">Journey options.</span>
+          <span data-en="Pick the fastest way there." data-he="בחרו את הדרך המהירה ביותר.">Pick the fastest way there.</span>
+        </h3>
+      </div>
+    </div>
+    <div class="shot-card reveal" style="--i:2">
       <div class="phone">
         <div class="island"></div>
         <div class="screen">
@@ -664,14 +662,13 @@ footer{
                alt="Step by Step" data-alt-en="Step by Step" data-alt-he="שלב אחר שלב">
         </div>
       </div>
-      <figcaption data-en="Step by Step" data-he="שלב אחר שלב">Step by Step</figcaption>
-    </figure>
-  </div>
-
-  <div class="dots" id="dots" role="group" aria-label="Screenshots">
-    <button class="active" aria-label="1"></button>
-    <button aria-label="2"></button>
-    <button aria-label="3"></button>
+      <div class="copy">
+        <h3>
+          <span class="eyebrow" data-en="Step by step." data-he="שלב אחר שלב.">Step by step.</span>
+          <span data-en="Never miss your stop." data-he="לא תפספסו את התחנה.">Never miss your stop.</span>
+        </h3>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -755,36 +752,6 @@ footer{
     for (var f = 0; f < revealTargets.length; f++) revealTargets[f].classList.add('in');
   }
 
-  /* ---------- MOBILE SCREENSHOT DOTS ---------- */
-  var row = document.getElementById('phoneRow');
-  var dots = document.getElementById('dots').querySelectorAll('button');
-  var phones = row.querySelectorAll('.shot');
-
-  function setActiveDot(index) {
-    for (var d = 0; d < dots.length; d++) dots[d].classList.toggle('active', d === index);
-  }
-
-  /* rect-based so it behaves in both LTR and RTL */
-  row.addEventListener('scroll', function () {
-    var rowRect = row.getBoundingClientRect();
-    var center = rowRect.left + rowRect.width / 2;
-    var best = 0, bestDist = Infinity;
-    for (var p = 0; p < phones.length; p++) {
-      var rect = phones[p].getBoundingClientRect();
-      var dist = Math.abs(rect.left + rect.width / 2 - center);
-      if (dist < bestDist) { bestDist = dist; best = p; }
-    }
-    setActiveDot(best);
-  }, { passive: true });
-
-  for (var i2 = 0; i2 < dots.length; i2++) {
-    (function (idx) {
-      dots[idx].addEventListener('click', function () {
-        phones[idx].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-        setActiveDot(idx);
-      });
-    })(i2);
-  }
 })();
 </script>
 </body>
