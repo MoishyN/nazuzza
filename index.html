@@ -243,12 +243,38 @@ h1,h2,h3{margin:0}
   top:-14%;
   height:128%;
   z-index:0;
+  filter:blur(2px);
   will-change:transform;
   pointer-events:none;
 }
 .shots-map img{width:100%;height:100%;object-fit:cover}
 .screenshots > .section-title,
 .screenshots > .shot-list{position:relative;z-index:1}
+/* ::after (not ::before) so it paints above the map layer; carries the same
+   translucent wash as the hero plus a progressive fade at both edges */
+.screenshots::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background:
+    linear-gradient(to bottom,
+      rgba(var(--bg-secondary-rgb),1) 0%,
+      rgba(var(--bg-secondary-rgb),.94) 10%,
+      rgba(var(--bg-secondary-rgb),.74) 28%,
+      rgba(var(--bg-secondary-rgb),.46) 50%,
+      rgba(var(--bg-secondary-rgb),.2) 74%,
+      rgba(var(--bg-secondary-rgb),0) 100%) top/100% 32% no-repeat,
+    linear-gradient(to top,
+      rgba(var(--bg-secondary-rgb),1) 0%,
+      rgba(var(--bg-secondary-rgb),.94) 10%,
+      rgba(var(--bg-secondary-rgb),.74) 28%,
+      rgba(var(--bg-secondary-rgb),.46) 50%,
+      rgba(var(--bg-secondary-rgb),.2) 74%,
+      rgba(var(--bg-secondary-rgb),0) 100%) bottom/100% 32% no-repeat,
+    linear-gradient(rgba(var(--bg-rgb),.42), rgba(var(--bg-rgb),.42));
+}
 /* Stacked pin blocks, after the apple.com/maps pattern */
 .feature-list{
   max-width:760px;
@@ -418,7 +444,7 @@ footer{
 /* the source map is a light-mode capture */
 @media (prefers-color-scheme: dark){
   .hero-map{filter:blur(2px) brightness(.48) saturate(.72)}
-  .shots-map{filter:brightness(.48) saturate(.72)}
+  .shots-map{filter:blur(2px) brightness(.48) saturate(.72)}
 }
 @media (prefers-reduced-motion: reduce){
   html{scroll-behavior:auto}
