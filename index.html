@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nazuzza — Israel Public Transit Planner</title>
+<meta name="description" content="Plan bus, train and light rail trips across Israel. Real-time arrivals, RavKav card reader, Hebrew and English.">
+<meta property="og:title" content="Nazuzza">
+<meta property="og:description" content="Israel Public Transit Planner for iOS">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://nazuzza.com">
+<meta name="apple-itunes-app" content="app-id=PLACEHOLDER">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://nazuzza.com">
+<link rel="icon" href="assets/icon.png">
+<link rel="apple-touch-icon" href="assets/icon.png">
+<meta property="og:image" content="https://nazuzza.com/assets/icon.png">
+<style>
+:root{
+  --bg:#ffffff;
+  --bg-secondary:#f5f5f7;
+  --text-primary:#1d1d1f;
+  --text-secondary:#6e6e73;
+  --glass-bg:rgba(255,255,255,0.7);
+  --glass-border:rgba(0,0,0,0.08);
+  --accent:#1A6EFF;
+  --map-land:#e8e8ed;
+  --map-roads:#c7c7cc;
+  --map-water:#d1e8ff;
+  --map-green:#dde7dd;
+  --map-city:#b8b8bf;
+  --bg-secondary-rgb:245,245,247;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#000000;
+    --bg-secondary:#1c1c1e;
+    --text-primary:#f5f5f7;
+    --text-secondary:#98989d;
+    --glass-bg:rgba(30,30,32,0.7);
+    --glass-border:rgba(255,255,255,0.08);
+    --accent:#1A6EFF;
+    --map-land:#2c2c2e;
+    --map-roads:#3a3a3c;
+    --map-water:#1a2a3a;
+    --map-green:#222b24;
+    --map-city:#48484a;
+    --bg-secondary-rgb:28,28,30;
+  }
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+  background:var(--bg);
+  color:var(--text-primary);
+  font-size:17px;              /* Apple .typography-body */
+  line-height:1.4705882353;
+  letter-spacing:-.022em;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+img,svg{display:block}
+a{color:inherit}
+/* Hebrew reads badly with Apple's tight Latin tracking */
+html[lang="he"] :is(body,h1,h2,h3,p,a,span,b,small,strong,.display,.section-title,.lead,.screen-label,.note){letter-spacing:normal}
+
+/* ---------- TYPE SCALE ----------
+   Values lifted from apple.com/maps (v/maps/d/built/styles/overview.built.css).
+   Apple steps type at discrete breakpoints rather than with clamp(). */
+h1,h2,h3{margin:0}
+/* .typography-headline-super (48/64/80 @ 600) — capped at 64 because the
+   wordmark sits in a 480px card, not full-bleed like Apple's hero. */
+.display{
+  font-size:64px;
+  line-height:1.0625;
+  font-weight:600;
+  letter-spacing:-.009em;
+}
+/* .typography-section-headline (56/80/96 @ 700) — top 96px tier dropped
+   because our content column is 1120px, not Apple's full-bleed 1440. */
+.section-title{
+  margin:0 auto 100px;
+  max-width:900px;
+  font-size:80px;
+  line-height:1.05;
+  font-weight:700;
+  letter-spacing:-.015em;
+  text-align:center;
+}
+/* .typography-intro — note the POSITIVE tracking on intro copy */
+.lead{
+  font-size:21px;
+  line-height:1.381002381;
+  font-weight:400;
+  letter-spacing:.011em;
+  color:var(--text-secondary);
+}
+
+/* ---------- HERO ---------- */
+.hero{
+  position:relative;
+  min-height:100svh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  overflow:hidden;
+  isolation:isolate;
+}
+.hero-map{
+  position:absolute;
+  inset:-5%;
+  z-index:0;
+  filter:blur(6px);
+  /* sea colour fills whatever the map outline does not cover */
+  background:var(--map-water);
+  pointer-events:none;
+}
+/* 'meet' fits the whole country in view; 'slice' was cropping it to a
+   narrow horizontal band on wide screens. inset:-5% keeps the blurred
+   edges off-screen, so no extra scale() is needed. */
+.hero-map svg{width:100%;height:100%}
+.hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:1;
+  background:radial-gradient(ellipse 90% 75% at 50% 45%, transparent 45%, var(--bg) 100%);
+  opacity:.3;
+  pointer-events:none;
+}
+/* Progressive blend from the map into the next section's solid colour.
+   Lands on exactly rgba(...,1) === --bg-secondary at the hero's bottom
+   edge, so there is no visible seam. Eased stops avoid banding. */
+.hero::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:42%;
+  z-index:1;
+  background:linear-gradient(to bottom,
+    rgba(var(--bg-secondary-rgb),0) 0%,
+    rgba(var(--bg-secondary-rgb),.05) 16%,
+    rgba(var(--bg-secondary-rgb),.14) 30%,
+    rgba(var(--bg-secondary-rgb),.28) 43%,
+    rgba(var(--bg-secondary-rgb),.46) 56%,
+    rgba(var(--bg-secondary-rgb),.65) 68%,
+    rgba(var(--bg-secondary-rgb),.82) 79%,
+    rgba(var(--bg-secondary-rgb),.93) 88%,
+    rgba(var(--bg-secondary-rgb),.98) 95%,
+    rgba(var(--bg-secondary-rgb),1) 100%);
+  pointer-events:none;
+}
+
+/* ---------- FLOATING CHIPS ---------- */
+.chips{
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:55%;
+  z-index:2;
+  pointer-events:none;
+}
+.chip{
+  position:absolute;
+  left:calc(var(--x) * 1%);
+  top:calc(var(--y) * 1%);
+  transform:translate(-50%,-50%);
+  pointer-events:auto;
+}
+.chip-float{animation:float var(--d) ease-in-out infinite alternate}
+@keyframes float{
+  from{transform:translateY(-7px)}
+  to{transform:translateY(7px)}
+}
+.chip-inner{
+  width:56px;
+  height:56px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--glass-bg);
+  -webkit-backdrop-filter:blur(12px);
+  backdrop-filter:blur(12px);
+  border:1px solid var(--glass-border);
+  box-shadow:0 4px 14px rgba(0,0,0,0.08);
+  transform:rotate(var(--r)) scale(1);
+  transition:transform .2s ease;
+  cursor:pointer;
+}
+.chip-inner:hover{transform:rotate(var(--r)) scale(1.1)}
+.chip-inner.bounce{transform:rotate(var(--r)) scale(1.15)}
+.chip-inner img{width:36px;height:36px;object-fit:contain}
+
+/* ---------- HERO CARD ---------- */
+.hero-card{
+  position:relative;
+  z-index:3;
+  width:100%;
+  max-width:480px;
+  padding:48px;
+  text-align:center;
+  background:var(--glass-bg);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  backdrop-filter:blur(24px) saturate(180%);
+  border:1px solid var(--glass-border);
+  border-radius:24px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.12);
+}
+.app-icon{
+  width:80px;
+  height:80px;
+  border-radius:20px;
+  margin:0 auto 22px;
+  overflow:hidden;
+  box-shadow:0 6px 20px rgba(26,110,255,0.35);
+}
+.app-icon img{width:100%;height:100%}
+.tagline{margin:14px 0 0}
+.badge-link{
+  display:inline-block;
+  margin-top:32px;
+  width:160px;
+  transition:transform .2s ease;
+}
+.badge-link:hover{transform:scale(1.04)}
+.badge-link svg{width:160px;height:auto}
+.note{                          /* Apple .typography-sosumi */
+  margin:14px 0 0;
+  font-size:12px;
+  line-height:1.3333733333;
+  letter-spacing:-.01em;
+  color:var(--text-secondary);
+}
+
+/* ---------- SECTIONS ---------- */
+.section{padding:140px 24px}
+.features{background:var(--bg-secondary)}
+.screenshots{background:var(--bg)}
+.feature-grid{
+  max-width:1120px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:24px;
+}
+.feature-card{
+  background:var(--glass-bg);
+  -webkit-backdrop-filter:blur(12px);
+  backdrop-filter:blur(12px);
+  border:1px solid var(--glass-border);
+  border-radius:20px;
+  padding:36px 26px;
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.feature-card .icon{color:var(--accent);margin-bottom:20px}
+.feature-card h3{               /* Apple .typography-label */
+  margin:0 0 10px;
+  font-size:24px;
+  line-height:1.1666666667;
+  font-weight:600;
+  letter-spacing:.009em;
+}
+.feature-card p{                /* Apple .typography-body */
+  margin:0;
+  font-size:17px;
+  line-height:1.4705882353;
+  letter-spacing:-.022em;
+  color:var(--text-secondary);
+  max-width:34ch;
+}
+
+/* ---------- PHONES ---------- */
+.phone-row{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:24px;
+  max-width:1120px;
+  margin:0 auto;
+}
+.phone{
+  --s:.95;
+  --ty:12px;
+  flex:none;
+  width:290px;
+  border-radius:60px;
+  border:2px solid var(--glass-border);
+  background:var(--bg-secondary);
+  padding:10px;
+  position:relative;
+  box-shadow:0 32px 64px rgba(0,0,0,0.2);
+  transform:scale(var(--s)) translateY(var(--ty));
+}
+.phone.center{--s:1.05;--ty:-12px;z-index:2}
+/* reveal sits on .shot, so it cannot clobber the phone's own scale */
+.shot.reveal{transform:translateY(24px)}
+.shot.reveal.in{transform:translateY(0)}
+.island{
+  position:absolute;
+  top:20px;
+  left:50%;
+  transform:translateX(-50%);
+  width:82px;
+  height:24px;
+  border-radius:100px;
+  background:#000;
+  z-index:3;
+}
+/* aspect-ratio matches the 386x840 exports, so nothing is cropped */
+.screen{
+  width:100%;
+  aspect-ratio:386/840;
+  border-radius:52px;
+  overflow:hidden;
+  background:var(--bg-secondary);
+}
+.screen img{width:100%;height:100%;object-fit:cover;display:block}
+.shot{margin:0;flex:none;display:flex;flex-direction:column;align-items:center}
+.shot figcaption{
+  margin-top:22px;
+  font-size:17px;
+  font-weight:600;
+  letter-spacing:-.014em;
+  color:var(--text-secondary);
+}
+.dots{display:none}
+
+/* ---------- FOOTER ---------- */
+footer{
+  background:var(--bg-secondary);
+  padding:48px 24px;
+  border-top:1px solid var(--glass-border);
+}
+.footer-inner{
+  max-width:1120px;
+  margin:0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+  flex-wrap:wrap;
+}
+.footer-brand{display:flex;align-items:center;gap:12px}
+.footer-icon{
+  width:40px;height:40px;border-radius:11px;flex:none;overflow:hidden;
+}
+.footer-icon img{width:100%;height:100%}
+.footer-brand strong{display:block;font-size:17px;font-weight:600;letter-spacing:-.014em}
+.footer-brand small{display:block;font-size:13px;color:var(--text-secondary)}
+.footer-links{display:flex;gap:24px;flex-wrap:wrap}
+.footer-links a{
+  color:var(--text-secondary);
+  text-decoration:none;
+  font-size:14px;
+  letter-spacing:-.01em;
+  transition:color .2s ease;
+}
+.footer-links a:hover{color:var(--accent)}
+
+/* ---------- SCROLL REVEAL ---------- */
+.reveal{
+  opacity:0;
+  transform:translateY(24px);
+  transition:opacity .6s cubic-bezier(0.16,1,0.3,1),transform .6s cubic-bezier(0.16,1,0.3,1);
+  transition-delay:calc(var(--i,0) * 0.1s);
+}
+.reveal.in{opacity:1;transform:translateY(0)}
+
+/* ---------- MOBILE ---------- */
+@media (max-width:767px){
+  /* body copy stays 17px on mobile — Apple does not shrink it */
+  .section{padding:100px 20px}
+  .display{font-size:48px;line-height:1.0834933333;letter-spacing:-.003em}
+  .section-title{
+    font-size:56px;
+    line-height:1.0714285714;
+    letter-spacing:0em;
+    margin-bottom:50px;
+  }
+  .feature-card h3{font-size:21px;line-height:1.1904761905;letter-spacing:0em}
+  /* card sits low, chips get the space above it */
+  .hero{
+    align-items:flex-end;
+    padding:20px 20px 40px;
+  }
+  .hero-card{padding:34px 26px;border-radius:22px}
+  .lead{font-size:19px;line-height:1.4211026316;letter-spacing:.012em}
+  .chips{height:60%}
+  .chip-extra{display:none}
+  /* one card per row so the copy has room */
+  .feature-grid{grid-template-columns:1fr;gap:16px}
+  .feature-card{padding:32px 24px}
+  .feature-card p{max-width:40ch}
+  .phone-row{
+    gap:16px;
+    overflow-x:auto;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    padding:12px calc(50% - 140px) 4px;
+    justify-content:flex-start;
+  }
+  .phone-row::-webkit-scrollbar{display:none}
+  .phone{
+    width:280px;
+    border-radius:56px;
+    padding:9px;
+    transform:none;
+  }
+  .phone.center{transform:none}
+  .shot{scroll-snap-align:center}
+  .screen{border-radius:48px}
+  .shot figcaption{margin-top:18px;font-size:16px}
+  .island{width:74px;height:22px;top:18px}
+  .dots{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    margin-top:28px;
+  }
+  .dots button{
+    width:8px;height:8px;padding:0;border:none;border-radius:50%;
+    background:var(--text-secondary);opacity:.3;transition:opacity .2s ease,transform .2s ease;
+    cursor:pointer;
+  }
+  .dots button.active{opacity:1;background:var(--accent);transform:scale(1.25)}
+}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *{animation:none !important;transition:none !important}
+  .reveal{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= HERO ================= -->
+<section class="hero" id="hero">
+
+  <!-- Stylized map of Israel (geo-proportional outline, blurred) -->
+  <div class="hero-map" aria-hidden="true">
+    <svg viewBox="0 0 324 702" preserveAspectRatio="xMidYMid meet" role="presentation">
+      <!-- sea -->
+      <rect x="0" y="0" width="324" height="702" fill="var(--map-water)"/>
+      <!-- land -->
+      <polygon fill="var(--map-land)" points="255.6,12.6 306,18 293.4,54 279,90 266.4,113.4 255.6,117 252,174.6 252,225 248.4,266.4 252,288 237.6,333 234,405 237.6,432 189,504 153,576 149.4,675 144,689.4 99,585 63,486 36,423 18,383.4 48.6,329.4 72,302.4 86.4,279 108,228.6 122.4,185.4 133.2,153 145.8,95.4 165.6,75.6 171,46.8 207,46.8 234,27"/>
+      <!-- forest / park areas -->
+      <g fill="var(--map-green)">
+        <polygon points="171,52 210,50 224,74 200,96 172,80"/>
+        <polygon points="140,110 162,96 176,120 156,140 138,130"/>
+        <polygon points="196,262 224,258 230,290 202,296 190,278"/>
+        <polygon points="150,470 186,486 176,520 142,506"/>
+      </g>
+      <!-- urban areas -->
+      <g fill="var(--map-city)" opacity=".55">
+        <ellipse cx="115" cy="228" rx="19" ry="26"/>
+        <ellipse cx="151" cy="101" rx="13" ry="17"/>
+        <ellipse cx="191" cy="284" rx="15" ry="13"/>
+        <ellipse cx="115" cy="378" rx="12" ry="11"/>
+        <ellipse cx="88" cy="280" rx="8" ry="9"/>
+        <ellipse cx="122" cy="186" rx="7" ry="10"/>
+      </g>
+      <!-- Sea of Galilee + Dead Sea -->
+      <ellipse cx="257" cy="98" rx="11" ry="16" fill="var(--map-water)"/>
+      <path d="M244,286 C252,290 252,300 250,318 C248,340 244,352 240,368 C237,382 234,392 231,396 C227,392 228,376 230,356 C232,332 234,306 238,292 Z" fill="var(--map-water)"/>
+      <!-- railway -->
+      <g stroke="var(--map-roads)" stroke-width="1.6" fill="none" stroke-dasharray="5 4" opacity=".9">
+        <path d="M151,101 L134,150 L122,186 L113,229 L104,262 L96,300 L108,346 L115,378"/>
+        <path d="M113,229 L146,246 L172,266 L191,284"/>
+      </g>
+      <!-- highways -->
+      <g stroke="var(--map-roads)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <!-- Route 2 / 4 coastal + Route 1 to Jerusalem + Route 90 Arava -->
+        <path d="M165,76 L151,101 L133,153 L122,186 L113,229 L98,258 L86,279 L72,302" stroke-width="2.8"/>
+        <path d="M113,229 L150,240 L172,258 L191,284" stroke-width="2.8"/>
+        <path d="M252,120 L246,168 L240,220 L234,290 L228,360 L214,430 L196,486 L172,556 L150,630 L146,680" stroke-width="2.8"/>
+        <!-- Route 6 spine -->
+        <path d="M200,70 L196,120 L188,180 L172,240 L150,300 L130,342 L115,378" stroke-width="2.4"/>
+        <!-- Route 40 / Negev -->
+        <path d="M113,229 L110,270 L106,320 L115,378 L138,440 L160,500 L166,556" stroke-width="2"/>
+        <!-- Jerusalem to Beersheba + Dead Sea links -->
+        <path d="M191,284 L166,318 L140,350 L115,378" stroke-width="1.8"/>
+        <path d="M191,284 L214,296 L232,306" stroke-width="1.8"/>
+        <path d="M115,378 L160,396 L206,404" stroke-width="1.8"/>
+        <!-- northern roads -->
+        <path d="M151,101 L180,90 L207,117 L232,104 L252,120" stroke-width="1.8"/>
+        <path d="M171,48 L196,60 L207,117" stroke-width="1.6"/>
+        <path d="M207,117 L228,150 L240,196" stroke-width="1.6"/>
+        <!-- local grid near the coast -->
+        <g stroke-width="1" opacity=".75">
+          <path d="M108,210 L134,222 M104,246 L132,258 M96,282 L124,292 M100,192 L128,202"/>
+          <path d="M126,200 L120,240 M138,214 L132,252 M112,180 L106,220"/>
+          <path d="M142,92 L164,104 M146,112 L166,122"/>
+          <path d="M182,276 L200,268 M186,292 L204,296"/>
+        </g>
+      </g>
+      <!-- city dots: Haifa, Tel Aviv, Jerusalem -->
+      <g fill="var(--map-roads)">
+        <circle cx="151" cy="101" r="6.5"/>
+        <circle cx="113" cy="229" r="7.5"/>
+        <circle cx="191" cy="284" r="6.5"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Floating operator logo chips (upper part of hero) -->
+  <div class="chips" aria-hidden="true">
+    <div class="chip" style="--x:12;--y:14"><div class="chip-float" style="--d:4.2s"><div class="chip-inner" style="--r:-9deg"><img src="assets/logos/logo-egged.png" alt="Egged" onerror="this.style.visibility='hidden'"></div></div></div>
+    <div class="chip" style="--x:17;--y:30"><div class="chip-float" style="--d:3.8s"><div class="chip-inner" style="--r:7deg"><img src="assets/logos/logo-dan.png" alt="Dan" onerror="this.style.visibility='hidden'"></div></div></div>
+    <div class="chip chip-extra" style="--x:9;--y:47"><div class="chip-float" style="--d:4.6s"><div class="chip-inner" style="--r:-13deg"><img src="assets/logos/logo-metropoline.png" alt="Metropoline" onerror="this.style.visibility='hidden'"></div></div></div>
+    <div class="chip" style="--x:26;--y:8"><div class="chip-float" style="--d:4s"><div class="chip-inner" style="--r:11deg"><img src="assets/logos/logo-kavim.png" alt="Kavim" onerror="this.style.visibility='hidden'"></div></div></div>
+    <div class="chip" style="--x:30;--y:24"><div class="chip-float" style="--d:4.8s"><div class="chip-inner" style="--r:-6deg"><img src="assets/logos/logo-israel-railways.png" alt="Israel Railways" onerror="this.style.visibility='hidden'"></div></div></div>
+    <div class="chip" style="--x:41;--y:6"><div class="chip-float" style="--d:3.6s"><div class="chip-inner" style="--r:13deg"><img src="assets/logos/logo-dankal.png" alt="Dankal" onerror="this.style.visibility='hidden'"></div></div></div>
+    <div class="chip chip-extra" style="--x:53;--y:13"><div class="chip-float" style="--d:4.4s"><div class="chip-inner" style="--r:-11deg"><img src="assets/logos/logo-kfir.png" alt="Kfir" onerror="this.style.visibility='hidden'"></div></div></div>
+    <div class="chip" style="--x:64;--y:5"><div class="chip-float" style="--d:4.1s"><div class="chip-inner" style="--r:8deg"><img src="assets/logos/logo-nateev.png" alt="Nateev Express" onerror="this.style.visibility='hidden'"></div></div></div>
+    <div class="chip" style="--x:73;--y:21"><div class="chip-float" style="--d:3.9s"><div class="chip-inner" style="--r:-14deg"><img src="assets/logos/logo-superbus.png" alt="Superbus" onerror="this.style.visibility='hidden'"></div></div></div>
+    <div class="chip" style="--x:84;--y:10"><div class="chip-float" style="--d:4.7s"><div class="chip-inner" style="--r:5deg"><img src="assets/logos/logo-afikim.png" alt="Afikim" onerror="this.style.visibility='hidden'"></div></div></div>
+    <div class="chip chip-extra" style="--x:91;--y:33"><div class="chip-float" style="--d:4.3s"><div class="chip-inner" style="--r:-8deg"><img src="assets/logos/logo-galim.png" alt="Galim" onerror="this.style.visibility='hidden'"></div></div></div>
+    <div class="chip chip-extra" style="--x:81;--y:45"><div class="chip-float" style="--d:3.7s"><div class="chip-inner" style="--r:12deg"><img src="assets/logos/logo-rama.png" alt="Rama" onerror="this.style.visibility='hidden'"></div></div></div>
+    <div class="chip chip-extra" style="--x:5;--y:29"><div class="chip-float" style="--d:5s"><div class="chip-inner" style="--r:14deg"><img src="assets/logos/logo-gbtours.png" alt="GB Tours" onerror="this.style.visibility='hidden'"></div></div></div>
+    <div class="chip chip-extra" style="--x:92;--y:17"><div class="chip-float" style="--d:4.5s"><div class="chip-inner" style="--r:-10deg"><img src="assets/logos/logo-egged-taavura.png" alt="Egged Taavura" onerror="this.style.visibility='hidden'"></div></div></div>
+    <div class="chip chip-extra" style="--x:6;--y:62"><div class="chip-float" style="--d:4.9s"><div class="chip-inner" style="--r:-12deg"><img src="assets/logos/logo-derech-egged.png" alt="Derech Egged" onerror="this.style.visibility='hidden'"></div></div></div>
+  </div>
+
+  <!-- Liquid glass card -->
+  <div class="hero-card">
+    <div class="app-icon">
+      <img src="assets/icon.png" alt="Nazuzza app icon" width="80" height="80">
+    </div>
+
+    <h1 class="display">Nazuzza</h1>
+    <p class="lead tagline" data-en="Israel Public Transit Planner" data-he="תכנון תחבורה ציבורית בזמן אמת בישראל">Israel Public Transit Planner</p>
+
+    <a class="badge-link" href="#" dir="ltr" aria-label="Download on the App Store">
+      <!-- App Store badge (recreation — swap for the official Apple asset before launch) -->
+      <svg width="160" height="53" viewBox="0 0 160 53" role="img" aria-label="Download on the App Store">
+        <rect x="0.6" y="0.6" width="158.8" height="51.8" rx="9" fill="#000000" stroke="#A6A6A6" stroke-width="1.2"/>
+        <g transform="translate(14,12.5) scale(1.12)" fill="#ffffff">
+          <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+        </g>
+        <text x="46" y="21" fill="#ffffff" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="9.5" letter-spacing="0.4">Download on the</text>
+        <text x="45" y="40" fill="#ffffff" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="20" font-weight="500" letter-spacing="-0.4">App Store</text>
+      </svg>
+    </a>
+
+    <p class="note" data-en="Currently available for iOS only" data-he="זמין כרגע ל-iOS בלבד">Currently available for iOS only</p>
+  </div>
+</section>
+
+
+<!-- ================= FEATURES ================= -->
+<section class="section features" id="features">
+  <h2 class="section-title reveal" data-en="Everything you need to get around" data-he="כל מה שצריך כדי להתנייד">Everything you need to get around</h2>
+
+  <div class="feature-grid">
+    <div class="feature-card reveal" style="--i:0">
+      <div class="icon" aria-hidden="true">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="6" width="15" height="13" rx="3"/>
+          <path d="M3 13h15"/><circle cx="7.5" cy="22.5" r="1.6"/><circle cx="13.5" cy="22.5" r="1.6"/>
+          <rect x="22" y="21" width="15" height="13" rx="4"/>
+          <path d="M22 28h15"/><path d="M26 37l2-3M33 37l-2-3"/>
+          <path d="M18 15c4 0 4 6 8 6" stroke-dasharray="2.5 3"/>
+        </svg>
+      </div>
+      <h3 data-en="Buses, Trains &amp; Light Rail" data-he="אוטובוסים, רכבות ורכבת קלה">Buses, Trains &amp; Light Rail</h3>
+      <p data-en="Plan trips combining all Israeli transit modes in one seamless journey." data-he="תכנן נסיעות המשלבות את כל אמצעי התחבורה הציבורית הישראלית.">Plan trips combining all Israeli transit modes in one seamless journey.</p>
+    </div>
+
+    <div class="feature-card reveal" style="--i:1">
+      <div class="icon" aria-hidden="true">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="24" cy="22" r="12"/>
+          <path d="M24 16v6l4.5 3"/>
+          <path d="M9 10c2.5 2.5 2.5 6.5 0 9"/>
+          <path d="M4 6c4.5 4.5 4.5 12.5 0 17"/>
+        </svg>
+      </div>
+      <h3 data-en="Live Departure Times" data-he="זמני יציאה בזמן אמת">Live Departure Times</h3>
+      <p data-en="See real-time arrivals for nearby stops with live vehicle tracking." data-he="ראה הגעות בזמן אמת לתחנות קרובות עם מעקב כלי רכב חי.">See real-time arrivals for nearby stops with live vehicle tracking.</p>
+    </div>
+
+    <div class="feature-card reveal" style="--i:2">
+      <div class="icon" aria-hidden="true">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="9" width="21" height="22" rx="3.5"/>
+          <path d="M7 14h7"/>
+          <path d="M18 15.5c2.4 2.6 2.4 8.4 0 11"/>
+          <path d="M24 11.5c4.6 4.6 4.6 14.4 0 19"/>
+          <path d="M30 7.5c6.8 6.8 6.8 22.2 0 27"/>
+        </svg>
+      </div>
+      <h3 data-en="RavKav Card Reader" data-he="קורא כרטיס רב-קו">RavKav Card Reader</h3>
+      <p data-en="Scan your RavKav card with NFC to check your balance and contract details." data-he="סרוק את כרטיס הרב-קו שלך עם NFC לבדיקת יתרה ופרטי חוזה.">Scan your RavKav card with NFC to check your balance and contract details.</p>
+    </div>
+
+    <div class="feature-card reveal" style="--i:3">
+      <div class="icon" aria-hidden="true">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="20" cy="20" r="15"/>
+          <path d="M5 20h30"/>
+          <path d="M20 5c4.5 4.6 4.5 25.4 0 30"/>
+          <path d="M20 5c-4.5 4.6-4.5 25.4 0 30"/>
+          <text x="11.5" y="18" font-size="9" font-weight="700" stroke="none" fill="currentColor" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">A</text>
+          <text x="23" y="30" font-size="9" font-weight="700" stroke="none" fill="currentColor" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">א</text>
+        </svg>
+      </div>
+      <h3 data-en="Hebrew &amp; English" data-he="עברית ואנגלית">Hebrew &amp; English</h3>
+      <p data-en="Fully localized in both languages, following your device settings." data-he="מותאם מלא לשתי השפות, לפי הגדרות המכשיר שלך.">Fully localized in both languages, following your device settings.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SCREENSHOTS ================= -->
+<section class="section screenshots" id="screenshots">
+  <h2 class="section-title reveal" data-en="Designed for how you travel" data-he="מעוצב לאופן שבו אתה נוסע">Designed for how you travel</h2>
+
+  <div class="phone-row" id="phoneRow">
+    <figure class="shot reveal" style="--i:0">
+      <div class="phone">
+        <div class="island"></div>
+        <div class="screen">
+          <img src="assets/screens/screen-plan.jpg"
+               data-src-en="assets/screens/screen-plan.jpg"
+               data-src-he="assets/screens/screen-plan-he.jpg"
+               width="386" height="840" loading="lazy" decoding="async"
+               alt="Route Planning" data-alt-en="Route Planning" data-alt-he="תכנון מסלול">
+        </div>
+      </div>
+      <figcaption data-en="Route Planning" data-he="תכנון מסלול">Route Planning</figcaption>
+    </figure>
+    <figure class="shot reveal" style="--i:1">
+      <div class="phone center">
+        <div class="island"></div>
+        <div class="screen">
+          <img src="assets/screens/screen-options.jpg"
+               data-src-en="assets/screens/screen-options.jpg"
+               data-src-he="assets/screens/screen-options-he.jpg"
+               width="386" height="840" loading="lazy" decoding="async"
+               alt="Journey Options" data-alt-en="Journey Options" data-alt-he="אפשרויות נסיעה">
+        </div>
+      </div>
+      <figcaption data-en="Journey Options" data-he="אפשרויות נסיעה">Journey Options</figcaption>
+    </figure>
+    <figure class="shot reveal" style="--i:2">
+      <div class="phone">
+        <div class="island"></div>
+        <div class="screen">
+          <img src="assets/screens/screen-steps.jpg"
+               data-src-en="assets/screens/screen-steps.jpg"
+               data-src-he="assets/screens/screen-steps-he.jpg"
+               width="386" height="840" loading="lazy" decoding="async"
+               alt="Step by Step" data-alt-en="Step by Step" data-alt-he="שלב אחר שלב">
+        </div>
+      </div>
+      <figcaption data-en="Step by Step" data-he="שלב אחר שלב">Step by Step</figcaption>
+    </figure>
+  </div>
+
+  <div class="dots" id="dots" role="group" aria-label="Screenshots">
+    <button class="active" aria-label="1"></button>
+    <button aria-label="2"></button>
+    <button aria-label="3"></button>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer id="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-icon">
+        <img src="assets/icon.png" alt="" width="40" height="40">
+      </div>
+      <div>
+        <strong>Nazuzza</strong>
+        <small>© 2026 Nazuzza</small>
+      </div>
+    </div>
+
+    <nav class="footer-links">
+      <a href="/privacy.html" data-en="Privacy Policy" data-he="מדיניות פרטיות">Privacy Policy</a>
+      <a href="/terms.html" data-en="Terms of Use" data-he="תנאי שימוש">Terms of Use</a>
+      <a href="mailto:moishy874@gmail.com" data-en="Contact" data-he="צור קשר">Contact</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- LANGUAGE: follows the device / browser language ---------- */
+  function applyLanguage(lang) {
+    var isHe = lang === 'he';
+    document.documentElement.lang = isHe ? 'he' : 'en';
+    document.documentElement.dir = isHe ? 'rtl' : 'ltr';
+
+    var nodes = document.querySelectorAll('[data-en][data-he]');
+    for (var i = 0; i < nodes.length; i++) {
+      var el = nodes[i];
+      var text = isHe ? el.getAttribute('data-he') : el.getAttribute('data-en');
+      if (el.children.length === 0) el.textContent = text;
+    }
+
+    /* screenshots exist in both languages — swap the image too */
+    var shots = document.querySelectorAll('[data-src-en][data-src-he]');
+    for (var j = 0; j < shots.length; j++) {
+      shots[j].src = shots[j].getAttribute(isHe ? 'data-src-he' : 'data-src-en');
+      shots[j].alt = shots[j].getAttribute(isHe ? 'data-alt-he' : 'data-alt-en');
+    }
+  }
+
+  /* ?lang=he / ?lang=en forces a language — handy for previewing without
+     changing your device settings. Otherwise the device language wins. */
+  var forced = (location.search.match(/[?&]lang=(he|en)\b/i) || [])[1];
+  var preferred = forced || (navigator.languages && navigator.languages[0]) || navigator.language || 'en';
+  /* 'iw' is the legacy code some platforms still report for Hebrew */
+  applyLanguage(/^(he|iw)/i.test(preferred) ? 'he' : 'en');
+
+  /* ---------- CHIP TAP BOUNCE ---------- */
+  var chips = document.querySelectorAll('.chip-inner');
+  for (var c = 0; c < chips.length; c++) {
+    (function (chip) {
+      chip.addEventListener('click', function () {
+        chip.classList.add('bounce');
+        setTimeout(function () { chip.classList.remove('bounce'); }, 200);
+      });
+    })(chips[c]);
+  }
+
+  /* ---------- SCROLL REVEAL ---------- */
+  var revealTargets = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window) {
+    var revealObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    for (var r = 0; r < revealTargets.length; r++) revealObserver.observe(revealTargets[r]);
+  } else {
+    for (var f = 0; f < revealTargets.length; f++) revealTargets[f].classList.add('in');
+  }
+
+  /* ---------- MOBILE SCREENSHOT DOTS ---------- */
+  var row = document.getElementById('phoneRow');
+  var dots = document.getElementById('dots').querySelectorAll('button');
+  var phones = row.querySelectorAll('.shot');
+
+  function setActiveDot(index) {
+    for (var d = 0; d < dots.length; d++) dots[d].classList.toggle('active', d === index);
+  }
+
+  /* rect-based so it behaves in both LTR and RTL */
+  row.addEventListener('scroll', function () {
+    var rowRect = row.getBoundingClientRect();
+    var center = rowRect.left + rowRect.width / 2;
+    var best = 0, bestDist = Infinity;
+    for (var p = 0; p < phones.length; p++) {
+      var rect = phones[p].getBoundingClientRect();
+      var dist = Math.abs(rect.left + rect.width / 2 - center);
+      if (dist < bestDist) { bestDist = dist; best = p; }
+    }
+    setActiveDot(best);
+  }, { passive: true });
+
+  for (var i2 = 0; i2 < dots.length; i2++) {
+    (function (idx) {
+      dots[idx].addEventListener('click', function () {
+        phones[idx].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        setActiveDot(idx);
+      });
+    })(i2);
+  }
+})();
+</script>
+</body>
+</html>
