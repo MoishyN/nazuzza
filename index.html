@@ -229,6 +229,10 @@ h1,h2,h3{margin:0}
      layer's negative bottom margin expands its containment rect by ~100svh,
      which otherwise lets it travel down over the footer */
   overflow:clip;
+  /* No vertical padding here: a sticky box is constrained by its containing
+     block's CONTENT box, so section padding would stop the map short of the
+     bottom edge and leave a hard cut. The spacing moves to .shot-list. */
+  padding-block:0;
   background:var(--map-water);
 }
 /* the cards float over this; JS shifts it slower than the scroll */
@@ -239,9 +243,9 @@ h1,h2,h3{margin:0}
   position:sticky;
   top:0;
   height:100svh;
-  /* bottom margin stays 0: a negative one would expand the sticky
-     containment rect and let the map travel down over the footer */
-  margin:calc(-1 * var(--pad-y)) calc(-1 * var(--pad-x)) 0;
+  /* full-bleed horizontally; no vertical margin needed now that the
+     section carries no vertical padding */
+  margin-inline:calc(-1 * var(--pad-x));
   z-index:0;
   pointer-events:none;
 }
@@ -250,7 +254,7 @@ h1,h2,h3{margin:0}
    scoped to beat the later `.shot-list{margin:0 auto}` on specificity. */
 .screenshots > .shots-map + *{margin-top:calc(-100svh)}
 .shots-map img{width:100%;height:100%;object-fit:cover}
-.screenshots > .shot-list{position:relative;z-index:1}
+.screenshots > .shot-list{position:relative;z-index:1;padding-block:var(--pad-y)}
 /* ::after (not ::before) so it paints above the map layer; carries the same
    translucent wash as the hero plus a progressive fade at both edges */
 .screenshots::after{
