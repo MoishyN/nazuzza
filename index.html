@@ -75,15 +75,6 @@ h1,h2,h3{margin:0}
 }
 /* .typography-section-headline (56/80/96 @ 700) — top 96px tier dropped
    because our content column is 1120px, not Apple's full-bleed 1440. */
-.section-title{
-  margin:0 auto 100px;
-  max-width:900px;
-  font-size:80px;
-  line-height:1.05;
-  font-weight:700;
-  letter-spacing:-.015em;
-  text-align:center;
-}
 /* .typography-intro — note the POSITIVE tracking on intro copy */
 .lead{
   font-size:21px;
@@ -254,10 +245,11 @@ h1,h2,h3{margin:0}
   z-index:0;
   pointer-events:none;
 }
-/* ...so the following content is pulled back over the map instead */
-.screenshots > .section-title{margin-top:calc(-100svh)}
+/* ...so the map's next sibling is pulled back over it instead. Keyed off
+   the sibling rather than a class so it survives content changes, and
+   scoped to beat the later `.shot-list{margin:0 auto}` on specificity. */
+.screenshots > .shots-map + *{margin-top:calc(-100svh)}
 .shots-map img{width:100%;height:100%;object-fit:cover}
-.screenshots > .section-title,
 .screenshots > .shot-list{position:relative;z-index:1}
 /* ::after (not ::before) so it paints above the map layer; carries the same
    translucent wash as the hero plus a progressive fade at both edges */
@@ -421,22 +413,22 @@ footer{
 .reveal.in{opacity:1;transform:translateY(0)}
 
 /* ---------- MOBILE ---------- */
+@media (min-width:768px){
+  /* zigzag: every other card puts the copy first */
+  .shot-card.flip .copy{order:1}
+  .shot-card.flip .phone{order:2}
+}
 @media (max-width:767px){
   /* body copy stays 17px on mobile — Apple does not shrink it */
   .section{--pad-y:100px;--pad-x:20px}
   .display{font-size:56px;line-height:1.0714285714;letter-spacing:0em}
-  .section-title{
-    font-size:56px;
-    line-height:1.0714285714;
-    letter-spacing:0em;
-    margin-bottom:50px;
-  }
   /* card sits low, chips get the space above it */
   .hero{
     align-items:flex-end;
     padding:20px 20px 40px;
   }
   .hero-card{max-width:none}
+  .app-icon{width:84px;height:84px;border-radius:24px;margin-bottom:22px}
   .lead{font-size:19px;line-height:1.4211026316;letter-spacing:.012em}
   .chips{height:60%}
   .chip-extra{display:none}
@@ -589,10 +581,11 @@ footer{
           <circle cx="50" cy="117" r="4.5"/>
         </g>
         <g transform="translate(28,24) scale(1.1)" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 33c0-9.5 11-8 13-16 1.6-6.2 6-8 10-8"/>
-          <circle cx="9" cy="33" r="2.9" fill="#fff" stroke="none"/>
-          <path d="M27.5 4.5 32 9l-4.5 4.5"/>
-          <circle cx="21.6" cy="16.4" r="2.4"/>
+<circle cx="11" cy="9" r="2.3" fill="#fff" stroke="none"/>
+          <circle cx="11" cy="20" r="2.3" fill="#fff" stroke="none"/>
+          <circle cx="11" cy="31" r="2.3" fill="#fff" stroke="none"/>
+          <path d="M11 13.4v3.2M11 24.4v3.2" stroke-width="2"/>
+          <path d="M18 9h14M18 20h10M18 31h13"/>
         </g>
       </svg>
       <h3 data-en="Step-by-Step Instructions" data-he="הוראות שלב אחר שלב">Step-by-Step Instructions</h3>
@@ -633,8 +626,6 @@ footer{
            sizes="100vw" alt="" loading="lazy" decoding="async">
   </div>
 
-  <h2 class="section-title reveal" data-en="Designed for how you travel" data-he="מעוצב לאופן שבו אתה נוסע">Designed for how you travel</h2>
-
   <div class="shot-list">
     <div class="shot-card reveal" style="--i:0">
       <div class="phone">
@@ -654,7 +645,7 @@ footer{
         </h3>
       </div>
     </div>
-    <div class="shot-card reveal" style="--i:1">
+    <div class="shot-card flip reveal" style="--i:1">
       <div class="phone">
         <div class="island"></div>
         <div class="screen">
