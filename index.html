@@ -113,8 +113,9 @@ h1,h2,h3{margin:0}
   background:var(--map-water);
   pointer-events:none;
 }
-/* contain, not cover: the whole map image is shown, never zoomed or cropped */
-.hero-map img{width:100%;height:100%;object-fit:contain}
+/* cover so the image spans the full width with no band at the edges; there
+   is no scale() on top, so the only crop is the aspect difference */
+.hero-map img{width:100%;height:100%;object-fit:cover}
 
 .hero::before{
   content:"";
@@ -228,23 +229,23 @@ h1,h2,h3{margin:0}
 }
 
 /* ---------- SECTIONS ---------- */
-.section{padding:140px 24px}
+.section{--pad-y:140px;--pad-x:24px;padding:var(--pad-y) var(--pad-x)}
 .features{background:var(--bg-secondary)}
 .screenshots{
   position:relative;
-  overflow:hidden;
+  /* no overflow:hidden here — it would break the sticky map layer */
   background:var(--map-water);
 }
 /* the cards float over this; JS shifts it slower than the scroll */
 .shots-map{
-  position:absolute;
-  left:-6%;
-  right:-6%;
-  top:-14%;
-  height:128%;
+  /* one viewport tall and sticky: the cards scroll over a map that holds
+     still, and cover has an almost-matching aspect so it is not zoomed.
+     Negative margins cancel the section padding and remove it from flow. */
+  position:sticky;
+  top:0;
+  height:100svh;
+  margin:calc(-1 * var(--pad-y)) calc(-1 * var(--pad-x)) calc(var(--pad-y) - 100svh);
   z-index:0;
-  filter:blur(2px);
-  will-change:transform;
   pointer-events:none;
 }
 .shots-map img{width:100%;height:100%;object-fit:cover}
@@ -273,7 +274,7 @@ h1,h2,h3{margin:0}
       rgba(var(--bg-secondary-rgb),.46) 50%,
       rgba(var(--bg-secondary-rgb),.2) 74%,
       rgba(var(--bg-secondary-rgb),0) 100%) bottom/100% 32% no-repeat,
-    linear-gradient(rgba(var(--bg-rgb),.42), rgba(var(--bg-rgb),.42));
+    linear-gradient(rgba(var(--bg-rgb),.32), rgba(var(--bg-rgb),.32));
 }
 /* Stacked pin blocks, after the apple.com/maps pattern */
 .feature-list{
@@ -411,7 +412,7 @@ footer{
 /* ---------- MOBILE ---------- */
 @media (max-width:767px){
   /* body copy stays 17px on mobile — Apple does not shrink it */
-  .section{padding:100px 20px}
+  .section{--pad-y:100px;--pad-x:20px}
   .display{font-size:56px;line-height:1.0714285714;letter-spacing:0em}
   .section-title{
     font-size:56px;
@@ -444,7 +445,7 @@ footer{
 /* the source map is a light-mode capture */
 @media (prefers-color-scheme: dark){
   .hero-map{filter:blur(2px) brightness(.48) saturate(.72)}
-  .shots-map{filter:blur(2px) brightness(.48) saturate(.72)}
+  .shots-map{filter:brightness(.48) saturate(.72)}
 }
 @media (prefers-reduced-motion: reduce){
   html{scroll-behavior:auto}
@@ -743,27 +744,6 @@ footer{
     })(chips[c]);
   }
 
-  /* ---------- PARALLAX MAP BEHIND THE SCREENSHOT CARDS ---------- */
-  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var pxSection = document.getElementById('screenshots');
-  var pxLayer = document.getElementById('shotsMap');
-  if (pxLayer && pxSection && !reduceMotion) {
-    var queued = false;
-    function placeMap() {
-      var r = pxSection.getBoundingClientRect();
-      var vh = window.innerHeight || 1;
-      /* -1 while the section is still below the fold, +1 once it is above */
-      var p = ((vh - r.top) / (vh + r.height)) * 2 - 1;
-      pxLayer.style.transform = 'translate3d(0,' + (p * -90).toFixed(1) + 'px,0)';
-      queued = false;
-    }
-    function queueMap() {
-      if (!queued) { queued = true; requestAnimationFrame(placeMap); }
-    }
-    window.addEventListener('scroll', queueMap, { passive: true });
-    window.addEventListener('resize', queueMap);
-    placeMap();
-  }
 
   /* ---------- SCROLL REVEAL ---------- */
   var revealTargets = document.querySelectorAll('.reveal');
